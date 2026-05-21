@@ -1,74 +1,95 @@
 # Bayesian Backtest Overfitting
 
-This project demonstrates how easy it is to overfit a trading strategy through parameter search, and how Bayesian shrinkage can produce a more realistic estimate of strategy quality.
+This project studies how parameter search can inflate the apparent performance of simple trading strategies, and how empirical Bayes shrinkage can produce more conservative estimates of strategy quality.
 
-The goal is **not** to claim a profitable trading strategy. The goal is to show statistical discipline: when many strategies are tested, the best in-sample result is often inflated by noise.
+The goal is not to claim a profitable trading strategy. The goal is to build a transparent research workflow for measuring how much apparent performance may be due to noise, selection bias, and overfitting.
 
-## Project idea
+## Project overview
 
-I test a grid of moving-average crossover strategies on SPY. Each strategy uses a short moving average and a long moving average. The strategy is long when the short moving average is above the long moving average and flat otherwise.
+The first version tests a grid of moving-average crossover strategies on SPY. Each strategy uses a short moving average and a long moving average. The strategy is long when the short moving average is above the long moving average and flat otherwise.
 
 The project compares:
 
-1. Raw in-sample Sharpe
-2. Out-of-sample Sharpe
-3. Bayesian-shrunken Sharpe
-4. Equity curves with transaction costs
-
-The Bayesian component estimates a more realistic latent Sharpe ratio by shrinking noisy observed Sharpes toward the overall strategy population mean.
+1. Raw in-sample Sharpe ratios
+2. Out-of-sample Sharpe ratios
+3. Empirical Bayes-shrunken Sharpe estimates
+4. Equity curves after transaction costs
 
 ## Why this matters
 
-A naive backtest asks:
+A standard backtest answers:
 
-> Which strategy had the best historical Sharpe?
+> Which strategy performed best historically?
 
-A better research process asks:
+That is not enough when many strategies or parameters have been tested. The best historical result may be unusually strong simply because many trials were attempted.
 
-> After testing many strategies, how much of the best Sharpe should I actually believe?
+This project asks a more cautious question:
 
-This project answers the second question.
+> After testing many strategy variants, how much of the best observed performance should be treated as reliable?
 
 ## Method
 
-For each strategy \(i\), the observed Sharpe is treated as noisy evidence about an unknown true Sharpe:
+For each strategy `i`, the observed Sharpe ratio is treated as noisy evidence about an unknown true Sharpe ratio:
 
-\[
-\hat{S}_i \sim N(S_i, \sigma_i^2)
-\]
+```text
+observed_sharpe_i ~ Normal(true_sharpe_i, standard_error_i^2)
+```
 
-The true Sharpes are assumed to come from a common population:
+The true Sharpe ratios are assumed to come from a common population:
 
-\[
-S_i \sim N(\mu, \tau^2)
-\]
+```text
+true_sharpe_i ~ Normal(group_mean, between_strategy_variance)
+```
 
-This leads to a shrinkage estimate:
+This gives a shrinkage estimate:
 
-\[
-E[S_i \mid \hat{S}_i] =
-w_i \hat{S}_i + (1-w_i)\mu
-\]
+```text
+bayesian_sharpe_i =
+    weight_i * observed_sharpe_i
+    + (1 - weight_i) * group_mean
+```
 
 where:
 
-\[
-w_i = \frac{\tau^2}{\tau^2 + \sigma_i^2}
-\]
+```text
+weight_i =
+    between_strategy_variance
+    / (between_strategy_variance + standard_error_i^2)
+```
 
-If a strategy's Sharpe estimate is noisy, it is pulled strongly toward the group average. If the estimate is more reliable, it is trusted more.
+If a strategy's Sharpe estimate is noisy, the estimate is pulled more strongly toward the group average. If the estimate is more stable, it is trusted more.
 
 ## Current MVP
 
-The first version includes:
+The current version includes:
 
 - SPY daily data via `yfinance`
-- Moving-average crossover strategy grid
+- Moving-average crossover parameter grid
 - Train/test split
 - Transaction costs
-- Sharpe, CAGR, max drawdown, turnover
-- Empirical Bayes shrinkage of Sharpe ratios
-- Plots for overfitting diagnosis
+- Sharpe, CAGR, maximum drawdown, and turnover
+- Empirical Bayes shrinkage of in-sample Sharpe ratios
+- Diagnostic plots for overfitting and out-of-sample degradation
+
+## Repository structure
+
+```text
+bayesian-backtest-overfitting/
+├── README.md
+├── PROJECT_CONTEXT.md
+├── requirements.txt
+├── run_project.py
+├── src/
+│   ├── data.py
+│   ├── strategies.py
+│   ├── backtester.py
+│   ├── metrics.py
+│   ├── bayesian.py
+│   └── plots.py
+├── data/
+├── figures/
+└── reports/
+```
 
 ## How to run
 
@@ -81,8 +102,21 @@ pip install -r requirements.txt
 python run_project.py
 ```
 
-The script downloads SPY data, runs the strategy grid, calculates Bayesian shrinkage estimates, and saves results/figures.
+The script downloads SPY data, runs the strategy grid, applies empirical Bayes shrinkage, and saves results and figures.
 
-## Main hiring signal
+## Outputs
 
-This project shows that I understand a core problem in quant research: strategy discovery can easily become data mining. Instead of presenting a cherry-picked backtest, I quantify how much apparent alpha disappears after accounting for noise, parameter search, and out-of-sample validation.
+After running the project, the main outputs are:
+
+```text
+reports/strategy_results.csv
+reports/final_summary.md
+figures/train_sharpe_distribution.png
+figures/top_train_vs_test_sharpe.png
+figures/raw_vs_bayes_sharpe.png
+figures/best_strategy_equity_curve.png
+```
+
+## Interpretation
+
+This project should be interpreted as a study of model selection risk, not as investment advice. The central question is whether a strong in-sample result remains credible after accounting for multiple testing, transaction costs, and out-of-sample validation.

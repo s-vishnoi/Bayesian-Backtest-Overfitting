@@ -2,13 +2,13 @@
 
 ## What this project is
 
-A quant research portfolio project showing how parameter search can create misleading trading backtests, and how empirical Bayes shrinkage can give more realistic estimates of strategy quality.
+A quant research project studying how parameter search can create misleading trading backtests, and how empirical Bayes shrinkage can give more conservative estimates of strategy quality.
 
-The project is intentionally framed as an **anti-overfitting research tool**, not as a trading bot.
+The public-facing framing should stay research-focused:
 
-## Core hiring message
+> This is a study of model selection risk and backtest overfitting, not a claim of profitable trading performance.
 
-> Most student quant projects try to maximize backtest performance. This project does the more mature thing: it measures how much of apparent performance disappears after accounting for parameter search, noise, transaction costs, and out-of-sample validation.
+Avoid public README language like "hiring signal," "impress recruiters," or anything that makes the repo sound performative.
 
 ## Current MVP scope
 
@@ -27,11 +27,11 @@ The project is intentionally framed as an **anti-overfitting research tool**, no
 
 ## Bayesian idea in plain English
 
-The observed Sharpe of a strategy is noisy. If we test many strategies, the best observed Sharpe is likely inflated by luck.
+The observed Sharpe of a strategy is noisy. If many strategies are tested, the best observed Sharpe is likely inflated by luck.
 
 Bayesian shrinkage combines:
 
-1. A prior belief that most strategies are mediocre
+1. A prior belief that most strategies are close to the strategy population average
 2. The observed Sharpe from the backtest
 3. The uncertainty in the Sharpe estimate
 
@@ -39,7 +39,7 @@ This produces a posterior/shrunken estimate of the strategy's latent true Sharpe
 
 In simple language:
 
-> The strategy looked great in the backtest, but after accounting for noise and the fact that many strategies were tested, its realistic Sharpe is probably lower.
+> The strategy looked strong in the backtest, but after accounting for noise and the fact that many strategies were tested, its realistic Sharpe estimate is lower.
 
 ## Current file map
 
@@ -61,6 +61,24 @@ bayesian-backtest-overfitting/
 ├── figures/
 └── reports/
 ```
+
+## Iteration workflow preference
+
+When discussing a file change or strategy change, provide the updated replacement file quietly at the end with the same filename as the repo file.
+
+Do not rename replacement artifacts unless explicitly requested.
+
+Do not include extra push, copy, or terminal instructions after providing the replacement file unless explicitly requested.
+
+For example:
+
+- If `README.md` changes, provide only an updated `README.md`.
+- If `PROJECT_CONTEXT.md` changes, provide only an updated `PROJECT_CONTEXT.md`.
+- If `src/bayesian.py` changes, provide only an updated `bayesian.py`.
+
+## README formatting note
+
+README uses plain-text equations instead of LaTeX so formulas display reliably on GitHub.
 
 ## Next improvements
 
@@ -85,24 +103,4 @@ Priority 3:
 
 Paste this prompt:
 
-> I am working on a GitHub portfolio project called `bayesian-backtest-overfitting`. It tests many moving-average crossover strategies on SPY, shows that the best in-sample Sharpe is inflated, and applies empirical Bayes shrinkage to estimate more realistic latent Sharpe ratios. Please continue iteratively from the repo context in `PROJECT_CONTEXT.md`. Preserve the project structure and keep adding complete files or patches. The goal is to impress quant hiring teams by showing statistical discipline around backtest overfitting.
-
-## Current push workflow
-
-After unzipping the project:
-
-```bash
-cd bayesian-backtest-overfitting
-git init
-git add .
-git commit -m "Initial Bayesian backtest overfitting MVP"
-gh repo create bayesian-backtest-overfitting --public --source=. --remote=origin --push
-```
-
-For later iterations:
-
-```bash
-git add .
-git commit -m "Describe the change"
-git push
-```
+> I am working on a GitHub project called `bayesian-backtest-overfitting`. It tests many moving-average crossover strategies on SPY, shows that the best in-sample Sharpe can be inflated, and applies empirical Bayes shrinkage to estimate more conservative latent Sharpe ratios. Please continue iteratively from the repo context in `PROJECT_CONTEXT.md`. Preserve the project structure and keep adding complete files or replacement files with original filenames. Public-facing language should stay research-focused and avoid sounding like the repo was created for hiring. After discussing a file or strategy change, quietly provide only the updated replacement file at the end, with no extra terminal or push instructions unless explicitly requested.
